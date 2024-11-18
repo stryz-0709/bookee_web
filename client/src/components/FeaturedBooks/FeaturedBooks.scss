@@ -1,0 +1,26 @@
+.featuredBooks{
+  .carousel-item {
+    transition: -webkit-transform 0.4s ease;
+    transition: transform 0.4s ease;
+    transition: transform 0.4s ease, -webkit-transform 0.4s ease;
+    -webkit-backface-visibility: visible;
+            backface-visibility: visible;
+  }
+
+  // .carousel-inner {
+  //   display: flex;
+  //   justify-content: center;
+  //   width: 80%; /* Adjust as needed */
+  //   margin: 0 auto;
+  // }
+
+
+  .carousel-control-prev-icon{
+    filter: invert(1);
+    width: 2rem;
+  }
+  .carousel-control-next-icon {
+    filter: invert(1);
+    width: 2rem;
+  }
+}
