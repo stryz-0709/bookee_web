@@ -1,7 +1,7 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const AuthorPubInfo = () => {
+const TableInfo = ({ book }) => {
   return (
     <div className="bg-none mt-5">
         <h5><strong>Thông tin chi tiết</strong></h5>
@@ -9,31 +9,40 @@ const AuthorPubInfo = () => {
             <tbody>
             <tr>
                 <th scope="row">ISBN:</th>
-                <td>978-0133970777</td>
+                <td>{book[0]?.ISBN}</td>
             </tr>
             <tr>
                 <th scope="row">Tác giả:</th>
-                <td>Ramez Elmasri, Shamkant Navathe</td>
+                <td>{book[0]?.authors && book[0]?.authors.length > 0 ? (
+            book[0]?.authors.map((author, index) => (
+              <span key={author.id}>
+                {author.name}
+                {index < book[0]?.authors.length - 1 && ", "}
+              </span>
+            ))
+          ) : (
+            "Unknown"
+          )}</td>
             </tr>
             <tr>
                 <th scope="row">Nhà xuất bản:</th>
-                <td>Pearson</td>
+                <td>{book[0]?.publisher?.name || "Unknown"}</td>
             </tr>
             <tr>
                 <th scope="row">Năm xuất bản:</th>
-                <td>2015</td>
+                <td>{book[0]?.publish_date}</td>
             </tr>
             <tr>
                 <th scope="row">Trọng lượng (g):</th>
-                <td>1814</td>
+                <td>{book[0]?.weight}</td>
             </tr>
             <tr>
                 <th scope="row">Số trang:</th>
-                <td>1280</td>
+                <td>{book[0]?.num_of_page}</td>
             </tr>
             <tr>
                 <th scope="row">Kích thước (cm):</th>
-                <td>24 x 16 x 1.6</td>
+                <td>{book[0]?.size}</td>
             </tr>
             </tbody>
         </table>
@@ -41,4 +50,4 @@ const AuthorPubInfo = () => {
     );
 };
 
-export default AuthorPubInfo;
+export default TableInfo;

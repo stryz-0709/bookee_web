@@ -1,0 +1,103 @@
+{
+  "kind": "collectionType",
+  "collectionName": "books",
+  "info": {
+    "singularName": "book",
+    "pluralName": "books",
+    "displayName": "Book",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "stock_quantity": {
+      "type": "integer",
+      "required": false
+    },
+    "price": {
+      "type": "decimal"
+    },
+    "ISBN": {
+      "type": "string",
+      "unique": true
+    },
+    "publisher": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::publisher.publisher",
+      "inversedBy": "books"
+    },
+    "description": {
+      "type": "text"
+    },
+    "num_of_page": {
+      "type": "integer"
+    },
+    "img": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "old_price": {
+      "type": "decimal"
+    },
+    "publish_date": {
+      "type": "date"
+    },
+    "genre": {
+      "type": "customField",
+      "default": "[]",
+      "options": [
+        "Horror",
+        "Textbook",
+        "Economics",
+        "Computer",
+        "Politics",
+        "Science",
+        "Comic",
+        "Physics",
+        "Mathematics",
+        "Biology",
+        "Geography",
+        "Novel",
+        "History"
+      ],
+      "customField": "plugin::multi-select.multi-select"
+    },
+    "authors": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::author.author",
+      "mappedBy": "books"
+    },
+    "language": {
+      "type": "string"
+    },
+    "reviews": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::review.review",
+      "mappedBy": "book"
+    },
+    "total_sold": {
+      "type": "integer"
+    },
+    "dimension": {
+      "type": "string"
+    },
+    "weight": {
+      "type": "decimal"
+    }
+  }
+}

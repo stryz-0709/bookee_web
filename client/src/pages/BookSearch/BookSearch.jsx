@@ -1,144 +1,186 @@
-import React, { useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import axios from "axios";
 import BookCard from "../../components/BookCard/BookCard";
-
-const booksData = Array.from({ length: 100 }, (_, index) => ({
-  id: index + 1,
-  title: `A Relatively Lengthened Book Title Number ${index + 1}`,
-  image: `/img/book${(index % 5) + 1}.jpg`, // Rotate through 5 sample images
-  price: `${(Math.random() * (300 - 50) + 50).toFixed(3)}`, // Random price between 50,000 and 300,000
-  oldPrice: `${(Math.random() * (350 - 300) + 300).toFixed(3)}`, // Random old price between 300,000 and 350,000
-  discount: `${Math.floor(Math.random() * 30) + 10}%`, // Random discount between 10% and 30%
-}));
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./BookSearch.scss";
+import Filter from "../../components/Filter/Filter";
+import BookQuery from "../../components/BookQuery/BookQuery";
 
 const BookSearch = () => {
-  const [books, setBooks] = useState(booksData);
-
+  const [books, setBooks] = useState([]);
+  const [filteredBooks, setFilteredBooks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const booksPerPage = 20;
 
-  // Calculate total pages
-  const totalPages = Math.ceil(booksData.length / booksPerPage);
+  // Filters
+  const [genreFilter, setGenreFilter] = useState([]);
+  const [languageFilter, setLanguageFilter] = useState([]);
+  const [priceRange, setPriceRange] = useState([[0, Infinity]]);
+  const [stockQuantityRange, setStockQuantityRange] = useState([0, Infinity]);
+  const [publishDateRange, setPublishDateRange] = useState([null, null]);
+  const [totalSoldRange, setTotalSoldRange] = useState([0, Infinity]);
 
-  // Get the books for the current page
-  const currentBooks = booksData.slice(
+  // Sorting
+  const [sortAttribute, setSortAttribute] = useState("price");
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("query") || "";
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setLoading(true);
+      try {
+        // Determine the API URL based on whether a query is provided
+        const url = query
+          ? `${process.env.REACT_APP_API_URL}/books?pagination[pageSize]=100000&populate=*&filters[$or][0][title][$containsi]=${query}&filters[$or][1][authors][name][$containsi]=${query}&filters[$or][2][publisher][name][$containsi]=${query}&filters[$or][3][genre][$containsi]=${query}`
+          : `${process.env.REACT_APP_API_URL}/books?pagination[pageSize]=100000&populate=*`;
+
+        const res = await axios.get(url, {
+          headers: {
+            Authorization: `bearer ${process.env.REACT_APP_API_TOKEN}`,
+          },
+        });
+
+        setBooks(res.data.data);
+        setFilteredBooks(res.data.data);
+      } catch (err) {
+        console.error(err.message);
+        setError("Failed to fetch books. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, [searchParams]);
+
+  console.log(books);
+
+
+  // Apply filters and sorting
+  const applyFiltersAndSorting = () => {
+    let filtered = books;
+
+    // Filter by genre
+    if (genreFilter.length > 0) {
+      filtered = filtered.filter((book) =>
+        book.genre.some((genre) => genreFilter.includes(genre))
+      );
+    }
+
+    // Filter by language
+    if (languageFilter.length > 0) {
+      filtered = filtered.filter((book) =>
+        languageFilter.includes(book.language)
+      );
+    }
+
+    // Filter by price ranges
+    filtered = filtered.filter((book) =>
+      priceRange.some(([min, max]) => book.price >= min && book.price <= max)
+    );
+
+    // Filter by stock quantity range
+    filtered = filtered.filter(
+      (book) =>
+        book.stock_quantity >= stockQuantityRange[0] &&
+        book.stock_quantity <= stockQuantityRange[1]
+    );
+
+    // Filter by total sold range
+    filtered = filtered.filter(
+      (book) =>
+        book.total_sold >= totalSoldRange[0] &&
+        book.total_sold <= totalSoldRange[1]
+    );
+
+    // Filter by publish date range
+    if (publishDateRange[0] && publishDateRange[1]) {
+      const [startDate, endDate] = publishDateRange.map((date) =>
+        new Date(date).getTime()
+      );
+      filtered = filtered.filter((book) => {
+        const bookDate = new Date(book.publish_date).getTime();
+        return bookDate >= startDate && bookDate <= endDate;
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      const valueA = a[sortAttribute];
+      const valueB = b[sortAttribute];
+      if (sortOrder === "asc") {
+        return valueA > valueB ? 1 : -1;
+      } else {
+        return valueA < valueB ? 1 : -1;
+      }
+    });
+
+    setFilteredBooks(filtered);
+  };
+
+  // Trigger filtering and sorting whenever filters, sorting, or books change
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [
+    genreFilter,
+    languageFilter,
+    priceRange,
+    stockQuantityRange,
+    publishDateRange,
+    totalSoldRange,
+    sortAttribute,
+    sortOrder,
+    books,
+  ]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+  const currentBooks = filteredBooks.slice(
     (currentPage - 1) * booksPerPage,
     currentPage * booksPerPage
   );
 
-  // Handle page change
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="container mt-5">
       <div className="row">
         {/* Sidebar Filters */}
         <div className="col-lg-3">
-          <div className="mb-4">
-            <h5><strong>Lọc Theo</strong></h5>
+        <Filter
+            genreFilter={genreFilter}
+            setGenreFilter={setGenreFilter}
+            languageFilter={languageFilter}
+            setLanguageFilter={setLanguageFilter}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+          />
           </div>
 
-          {/* Categories */}
-          <div className="mb-4">
-            <h6>Danh Mục Chính</h6>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="category1" />
-              <label className="form-check-label" htmlFor="category1">Sách Tiếng Việt (215)</label>
-            </div>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="category2" />
-              <label className="form-check-label" htmlFor="category2">Foreign Books (46)</label>
-            </div>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="category3" />
-              <label className="form-check-label" htmlFor="category3">Đồ Chơi (17)</label>
-            </div>
-          </div>
-
-          {/* Price Filter */}
-          <div className="mb-4">
-            <h6>Giá</h6>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="price1" />
-              <label className="form-check-label" htmlFor="price1">0 - 150.000 (257)</label>
-            </div>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="price2" />
-              <label className="form-check-label" htmlFor="price2">150.000 - 300.000 (31)</label>
-            </div>
-          </div>
-
-          {/* Brands */}
-          <div className="mb-4">
-            <h6>Thương Hiệu</h6>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="brand1" />
-              <label className="form-check-label" htmlFor="brand1">TAGGER (15)</label>
-            </div>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" id="brand2" />
-              <label className="form-check-label" htmlFor="brand2">Campus (13)</label>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content Area for Books */}
+        {/* Main Content */}
         <div className="col-lg-9">
-          <h5><strong>Kết Quả Tìm Kiếm</strong></h5>
-          <div className="d-flex justify-content-between mb-3">
-            <span>300 kết quả</span>
-            <div>
-              <button className="btn btn-light me-2">Sắp xếp theo</button>
-              <button className="btn btn-light">Còn hàng</button>
-            </div>
-          </div>
-
-          {/* Books List */}
-          <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-4 pt-4 pb-4">
-        {currentBooks.map((book) => (
-          <div key={book.id} className="col">
-            <BookCard book={book} />
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination Controls */}
-      <nav aria-label="Page navigation" className="mt-4">
-        <ul className="pagination justify-content-center">
-          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-          </li>
-
-          {Array.from({ length: totalPages }, (_, index) => (
-            <li key={index} className={`page-item ${currentPage === index + 1 ? "active" : ""}`}>
-              <button
-                className="page-link"
-                onClick={() => handlePageChange(index + 1)}
-              >
-                {index + 1}
-              </button>
-            </li>
-          ))}
-
-          <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </button>
-          </li>
-        </ul>
-        </nav>
+        <BookQuery
+              currentBooks={currentBooks}
+              filteredBooks={filteredBooks}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              handlePageChange={setCurrentPage}
+              sortAttribute={sortAttribute}
+              setSortAttribute={setSortAttribute}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+            />
         </div>
       </div>
     </div>

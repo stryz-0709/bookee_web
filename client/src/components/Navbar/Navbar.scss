@@ -79,3 +79,29 @@
 .dropdown-menu > li:hover > .dropdown-submenu {
   display: block;
 }
+
+.icon-container {
+  position: relative; /* Parent container for stacking icons */
+  display: inline-block;
+  width: 24px; /* Ensure consistent size */
+  height: 24px;
+}
+
+.icon {
+  position: absolute; /* Stack icons on top of each other */
+  top: 0;
+  left: 0;
+  transition: opacity 0.3s ease; /* Smooth transition */
+}
+
+.icon.filled {
+  opacity: 0; /* Initially hide the filled icon */
+}
+
+.icon-container:hover .icon.filled {
+  opacity: 1; /* Show the filled icon on hover */
+}
+
+.icon-container:hover .icon.outlined {
+  opacity: 0; /* Hide the outlined icon on hover */
+}

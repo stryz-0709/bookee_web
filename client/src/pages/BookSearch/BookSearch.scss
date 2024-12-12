@@ -1,0 +1,18 @@
+.pagination .page-item.active .page-link {
+    background-color: white !important; /* Custom background color */
+    border-color: #DC3545 !important;    /* Custom border color */
+    color: #DC3545 !important;         /* Custom text color */
+    font-weight: bold !important;      /* Make the text bold */
+}
+
+.pagination .page-item .page-link {
+    color: #212529 !important;         /* Custom text color for non-active buttons */
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #e5e5e5 !important;         /* Custom text color for disabled buttons */
+}
+
+.pagination .page-item {
+    border-radius: 0 !important;       /* Remove rounded corners */
+}

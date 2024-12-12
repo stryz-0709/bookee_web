@@ -1,0 +1,11 @@
+.list-group-item.active {
+    background-color: white !important; /* Custom background color */
+    border-color: white !important;    /* Custom border color */
+    border-radius: 0 !important;       /* Remove rounded corners */
+    color: #DC3545 !important;         /* Custom text color */
+    font-weight: bold !important;      /* Make the text bold */
+}
+
+.no-rounded {
+    border-radius: 0 !important;
+}
